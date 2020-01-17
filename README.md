@@ -1,5 +1,21 @@
 # Glow
 
+データセットをMNISTに対応させたもの、cpuで回すと1epoch2時間くらい。
+画像Tensorのshapeを(1,28,28)から(1,32,32)へ0埋めしている。
+
+MNISTのデータセットサイズは下記の通り。
+
+- len(train_dataset) == 60000
+- len(test_dataset) == 10000
+
+
+次のコマンドライン引数でテストしている。
+
+```
+rm -rf output
+python3 train.py --download --dataset mnist
+```
+
 This repository implements the [Glow](https://arxiv.org/abs/1807.03039) model using PyTorch on the CIFAR-10 and SVHN dataset. We use the trained Glow to reproduce some of the results of the paper ["Do Deep Generative Models Know What They Don't Know?"](https://arxiv.org/abs/1810.09136):
 
 ![Histogram Glow - CIFAR10 and SVHN](images/histogram_glow_cifar_svhn.png)

@@ -19,6 +19,25 @@ from datasets import get_CIFAR10, get_SVHN
 from model import Glow
 
 
+import torchvision
+class MyMNIST(torch.utils.data.Dataset):
+    """
+    PIL.ImageをToTensorする。
+    そののちに(1,28,28) -> (1,32,32)とパディング
+    """
+    def __init__(self, train, download):
+        self.dataset = torchvision.datasets.MNIST('/tmp/MNIST', train=train, download=download, transform=torchvision.transforms.ToTensor())
+        self.padnum = (32-28)//2
+        self.padfunc = torch.nn.ConstantPad2d(self.padnum, 0)
+
+    def __len__(self):return len(self.dataset)
+
+    def __getitem__(self, i):
+        image, label = self.dataset[i]
+        image = self.padfunc(image)
+        label = torch.eye(10)[label]
+        return (image, label)
+
 def check_manual_seed(seed):
     seed = seed or random.randint(1, 10000)
     random.seed(seed)
@@ -34,8 +53,31 @@ def check_dataset(dataset, dataroot, augment, download):
     if dataset == "svhn":
         svhn = get_SVHN(augment, dataroot, download)
         input_size, num_classes, train_dataset, test_dataset = svhn
+#    if dataset == "mnist":
+    if dataset == "mnist":
+        input_size = (32, 32, 1)
+        num_classes = 10
+        train_dataset = MyMNIST(train=True, download=download)
+        test_dataset  = MyMNIST(train=False, download=download)
 
     return input_size, num_classes, train_dataset, test_dataset
+"""
+input_size: (32, 32, 3)
+num_classes: 10
+dir(train_dataset):
+    ['__add__', '__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__getitem__',
+    '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__len__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__',
+    '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', '_check_integrity',
+    '_format_transform_repr', '_load_meta', '_repr_indent', 'base_folder', 'class_to_idx', 'classes', 'data', 'download', 'extra_repr',
+    'filename', 'meta', 'root', 'target_transform', 'targets', 'test_list', 'tgz_md5', 'train', 'train_list', 'transform', 'transforms', 'url']
+
+
+    ['__add__', '__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__getitem__', 
+    '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__len__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', 
+    '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', '_check_exists', 
+    '_format_transform_repr', '_repr_indent', 'class_to_idx', 'classes', 'data', 'download', 'extra_repr', 'processed_folder', 'raw_folder', 
+    'resources', 'root', 'target_transform', 'targets', 'test_data', 'test_file', 'test_labels', 'train', 'train_data', 'train_labels', 'training_file', 'transform', 'transforms']
+"""
 
 
 def compute_loss(nll, reduction="mean"):
@@ -308,7 +350,7 @@ if __name__ == "__main__":
         "--dataset",
         type=str,
         default="cifar10",
-        choices=["cifar10", "svhn"],
+        choices=["cifar10", "svhn", "mnist"],
         help="Type of the dataset to be used.",
     )
 
